@@ -1,7 +1,9 @@
 use std::{
     cmp::PartialEq,
     collections::{HashMap, hash_map::Entry},
+    ffi::CString,
     fs::{self, DirEntry, FileType, create_dir, create_dir_all, read_dir, read_link},
+    io,
     os::unix::fs::{FileTypeExt, MetadataExt, symlink},
     path::{Path, PathBuf},
 };
@@ -51,32 +53,38 @@ fn grab_fd() -> i32 {
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
-fn send_unmountable<P>(target: P)
+fn send_unmountable<P>(target: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    let path = target.as_ref().to_string_lossy().as_ptr() as u64;
+    let path = CString::new(target.as_ref().as_str()?)?;
     let cmd = KsuAddTryUmount {
-        arg: path,
+        arg: path.as_ptr() as u64,
         flags: 0x2,
         mode: 1,
     };
 
     unsafe {
         #[cfg(target_env = "gnu")]
-        libc::ioctl(
+        let ret = libc::ioctl(
             grab_fd() as libc::c_int,
             KSU_IOCTL_ADD_TRY_UMOUNT as u64,
             cmd,
         );
 
         #[cfg(not(target_env = "gnu"))]
-        libc::ioctl(
+        let ret = libc::ioctl(
             grab_fd() as libc::c_int,
             KSU_IOCTL_ADD_TRY_UMOUNT as i32,
             cmd,
         );
-    }
+
+        if ret < 0 {
+            log::error!("{}", io::Error::last_os_error());
+        }
+    };
+
+    Ok(())
 }
 
 #[cfg(not(any(target_os = "linux", target_os = "android")))]
@@ -343,7 +351,7 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                 );
                 mount_bind(module_path, target_path).with_context(|| {
                     // tell ksu about this mount
-                    send_unmountable(target_path);
+                    let _ = send_unmountable(target_path);
                     format!("mount module file {module_path:?} -> {work_dir_path:?}")
                 })?;
                 // we should use MS_REMOUNT | MS_BIND | MS_xxx to change mount flags
@@ -512,7 +520,7 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                     log::warn!("make dir {path:?} private: {e:#?}");
                 }
                 // tell ksu about this one too
-                send_unmountable(path);
+                let _ = send_unmountable(path);
             }
         }
         NodeFileType::Whiteout => {
