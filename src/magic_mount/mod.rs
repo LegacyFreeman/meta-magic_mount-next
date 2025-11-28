@@ -89,9 +89,9 @@ fn collect_module_files(module_dir: &Path, extra_partitions: &[String]) -> Resul
             let require_symlink = false;
 
             if path_of_root.is_dir() && (!require_symlink || path_of_system.is_symlink()) {
-                let name = partition.to_string();
+                let name = partition.clone();
                 if let Some(node) = system.children.remove(&name) {
-                    log::debug!("attach extra partition '{}' to root", name);
+                    log::debug!("attach extra partition '{name}' to root");
                     root.children.insert(name, node);
                 }
             }
@@ -164,6 +164,7 @@ fn mount_mirror<P: AsRef<Path>, WP: AsRef<Path>>(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
     path: P,
     work_dir_path: WP,
@@ -192,13 +193,17 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                         // tell ksu about this mount
                         let _ = send_unmountable(target_path);
                     }
-                    format!("mount module file {module_path:?} -> {work_dir_path:?}")
+                    format!(
+                        "mount module file {} -> {}",
+                        module_path.display(),
+                        work_dir_path.display(),
+                    )
                 })?;
                 // we should use MS_REMOUNT | MS_BIND | MS_xxx to change mount flags
                 if let Err(e) =
                     mount_remount(target_path, MountFlags::RDONLY | MountFlags::BIND, "")
                 {
-                    log::warn!("make file {target_path:?} ro: {e:#?}");
+                    log::warn!("make file {} ro: {e:#?}", target_path.display());
                 }
             } else {
                 bail!("cannot mount root file {}!", path.display());
@@ -212,7 +217,11 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                     work_dir_path.display()
                 );
                 clone_symlink(module_path, &work_dir_path).with_context(|| {
-                    format!("create module symlink {module_path:?} -> {work_dir_path:?}")
+                    format!(
+                        "create module symlink {} -> {}",
+                        module_path.display(),
+                        work_dir_path.display(),
+                    )
                 })?;
             } else {
                 bail!("cannot mount root symlink {}!", path.display());
@@ -286,7 +295,13 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                 );
                 mount_bind(&work_dir_path, &work_dir_path)
                     .context("bind self")
-                    .with_context(|| format!("creating tmpfs for {path:?} at {work_dir_path:?}"))?;
+                    .with_context(|| {
+                        format!(
+                            "creating tmpfs for {} at {}",
+                            path.display(),
+                            work_dir_path.display(),
+                        )
+                    })?;
             }
 
             if path.exists() && !current.replace {
@@ -308,9 +323,8 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                     if let Err(e) = result {
                         if has_tmpfs {
                             return Err(e);
-                        } else {
-                            log::error!("mount child {}/{name} failed: {e:#?}", path.display());
                         }
+                        log::error!("mount child {}/{name} failed: {e:#?}", path.display());
                     }
                 }
             }
@@ -321,12 +335,11 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                         "dir {} is declared as replaced but it is root!",
                         path.display()
                     );
-                } else {
-                    log::debug!("dir {} is replaced", path.display());
                 }
+                log::debug!("dir {} is replaced", path.display());
             }
 
-            for (name, node) in current.children.into_iter() {
+            for (name, node) in current.children {
                 if node.skip {
                     continue;
                 }
@@ -335,9 +348,8 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                 {
                     if has_tmpfs {
                         return Err(e);
-                    } else {
-                        log::error!("mount child {}/{name} failed: {e:#?}", path.display());
                     }
+                    log::error!("mount child {}/{name} failed: {e:#?}", path.display());
                 }
             }
 
@@ -350,14 +362,20 @@ fn do_magic_mount<P: AsRef<Path>, WP: AsRef<Path>>(
                 if let Err(e) =
                     mount_remount(&work_dir_path, MountFlags::RDONLY | MountFlags::BIND, "")
                 {
-                    log::warn!("make dir {path:?} ro: {e:#?}");
+                    log::warn!("make dir {} ro: {e:#?}", path.display());
                 }
                 mount_move(&work_dir_path, &path)
                     .context("move self")
-                    .with_context(|| format!("moving tmpfs {work_dir_path:?} -> {path:?}"))?;
+                    .with_context(|| {
+                        format!(
+                            "moving tmpfs {} -> {}",
+                            work_dir_path.display(),
+                            path.display()
+                        )
+                    })?;
                 // make private to reduce peer group count
                 if let Err(e) = mount_change(&path, MountPropagationFlags::PRIVATE) {
-                    log::warn!("make dir {path:?} private: {e:#?}");
+                    log::warn!("make dir {} private: {e:#?}", path.display());
                 }
                 if UMOUNT.load(std::sync::atomic::Ordering::Relaxed) {
                     // tell ksu about this one too
@@ -380,7 +398,7 @@ pub fn magic_mount<T: AsRef<Path>>(
     extra_partitions: &[String],
 ) -> Result<()> {
     if let Some(root) = collect_module_files(module_dir, extra_partitions)? {
-        log::debug!("collected: {}", root);
+        log::debug!("collected: {root}");
 
         let tmp_root = tmp_path.as_ref();
         let tmp_dir = tmp_root.join("workdir");
@@ -392,7 +410,7 @@ pub fn magic_mount<T: AsRef<Path>>(
         let result = do_magic_mount("/", &tmp_dir, root, false);
 
         if let Err(e) = unmount(&tmp_dir, UnmountFlags::DETACH) {
-            log::error!("failed to unmount tmp {}", e);
+            log::error!("failed to unmount tmp {e}");
         }
         fs::remove_dir(tmp_dir).ok();
 

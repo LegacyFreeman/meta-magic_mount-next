@@ -39,7 +39,7 @@ impl NodeFileType {
 pub struct Node {
     pub name: String,
     pub file_type: NodeFileType,
-    pub children: HashMap<String, Node>,
+    pub children: HashMap<String, Self>,
     // the module that owned this node
     pub module_path: Option<PathBuf>,
     pub replace: bool,
@@ -65,16 +65,15 @@ impl fmt::Display for Node {
             self.name,
             self.file_type,
             self.children,
-            if let Some(p) = &self.module_path {
-                p.to_string_lossy().to_string()
-            } else {
-                "None".to_string()
-            },
+            self.module_path
+                .as_ref()
+                .map_or_else(|| "None".to_string(), |p| p.to_string_lossy().to_string()),
             self.replace,
             self.skip
         )
     }
 }
+
 impl Node {
     pub fn collect_module_files<T: AsRef<Path>>(&mut self, module_dir: T) -> Result<bool> {
         let dir = module_dir.as_ref();
@@ -124,18 +123,21 @@ impl Node {
         if exists == 0 { Ok(true) } else { Ok(false) }
     }
 
-    pub fn new_root<T: ToString>(name: T) -> Self {
-        Node {
-            name: name.to_string(),
+    pub fn new_root<T>(name: T) -> Self
+    where
+        T: AsRef<str> + Into<String>,
+    {
+        Self {
+            name: name.into(),
             file_type: NodeFileType::Directory,
-            children: Default::default(),
+            children: HashMap::default(),
             module_path: None,
             replace: false,
             skip: false,
         }
     }
 
-    pub fn new_module<T: ToString>(name: T, entry: &DirEntry) -> Option<Self> {
+    pub fn new_module<T: ToString>(name: &T, entry: &DirEntry) -> Option<Self> {
         if let Ok(metadata) = entry.metadata() {
             let path = entry.path();
             let file_type = if metadata.file_type().is_char_device() && metadata.rdev() == 0 {
@@ -144,17 +146,18 @@ impl Node {
                 NodeFileType::from_file_type(metadata.file_type())
             };
             if let Some(file_type) = file_type {
-                let mut replace = false;
-                if file_type == NodeFileType::Directory
+                let replace = if file_type == NodeFileType::Directory
                     && let Ok(s) = Self::dir_is_replace(&path)
                     && s
                 {
-                    replace = true;
-                }
-                return Some(Node {
+                    true
+                } else {
+                    false
+                };
+                return Some(Self {
                     name: name.to_string(),
                     file_type,
-                    children: Default::default(),
+                    children: HashMap::default(),
                     module_path: Some(path),
                     replace,
                     skip: false,

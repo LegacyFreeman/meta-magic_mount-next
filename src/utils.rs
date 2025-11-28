@@ -111,10 +111,11 @@ pub fn ensure_temp_dir(temp_dir: &Path) -> Result<()> {
     if temp_dir.exists() {
         log::debug!("cleaning existing temp dir: {}", temp_dir.display());
         remove_dir_all(temp_dir)
-            .with_context(|| format!("failed to clean temp dir {temp_dir:?}"))?;
+            .with_context(|| format!("failed to clean temp dir {}", temp_dir.display()))?;
     }
 
-    create_dir_all(temp_dir).with_context(|| format!("failed to create temp dir {temp_dir:?}"))?;
+    create_dir_all(temp_dir)
+        .with_context(|| format!("failed to create temp dir {}", temp_dir.display()))?;
 
     log::debug!("temp dir ready: {}", temp_dir.display());
     Ok(())

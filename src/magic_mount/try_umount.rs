@@ -1,3 +1,5 @@
+#![allow(clippy::unreadable_literal)]
+
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use std::{os::fd::RawFd, path::Path, sync::OnceLock};
 
@@ -46,6 +48,7 @@ where
         flags: 2,
         mode: 1,
     };
+    #[allow(clippy::redundant_closure)]
     let fd = *DRIVER_FD.get_or_init(|| grab_fd());
 
     unsafe {

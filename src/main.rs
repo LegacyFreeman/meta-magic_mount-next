@@ -1,3 +1,12 @@
+#![deny(clippy::all, clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::cast_precision_loss,
+    clippy::cast_possible_wrap
+)]
+
 mod config;
 mod defs;
 mod magic_mount;
@@ -10,20 +19,17 @@ use env_logger::Builder;
 
 use crate::{config::Config, defs::CONFIG_FILE_DEFAULT, magic_mount::UMOUNT};
 
-fn load_config() -> Result<Config> {
+fn load_config() -> Config {
     if let Ok(config) = Config::load_default() {
-        log::info!(
-            "Loaded config from default location: {}",
-            CONFIG_FILE_DEFAULT
-        );
-        return Ok(config);
+        log::info!("Loaded config from default location: {CONFIG_FILE_DEFAULT}",);
+        return config;
     }
 
     log::info!("Using default configuration (no config file found)");
-    Ok(Config::default())
+    Config::default()
 }
 
-fn init_logger(verbose: bool) -> Result<()> {
+fn init_logger(verbose: bool) {
     let level = if verbose {
         log::LevelFilter::Debug
     } else {
@@ -44,16 +50,14 @@ fn init_logger(verbose: bool) -> Result<()> {
     builder.filter_level(level).init();
 
     log::info!("log level: {}", level.as_str());
-
-    Ok(())
 }
 
 fn main() -> Result<()> {
     // 加载配置
-    let config = load_config()?;
+    let config = load_config();
 
     // 初始化日志
-    init_logger(config.verbose)?;
+    init_logger(config.verbose);
 
     log::info!("Magic Mount Starting");
     log::info!("module dir      : {}", config.moduledir.display());
@@ -88,7 +92,7 @@ fn main() -> Result<()> {
     utils::cleanup_temp_dir(&tempdir);
 
     match result {
-        Ok(_) => {
+        Ok(()) => {
             log::info!("Magic Mount Completed Successfully");
             Ok(())
         }
