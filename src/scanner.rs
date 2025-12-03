@@ -36,7 +36,7 @@ fn read_prop<P: AsRef<Path>>(path: P, key: &str) -> Option<String> {
 /// 1. Do not have a 'system' directory.
 /// 2. Are disabled or removed.
 /// 3. Have the 'skip_mount' flag.
-pub fn scan_modules(module_dir: &PathBuf) -> Result<Vec<ModuleInfo>> {
+pub fn scan_modules(module_dir: &PathBuf) -> Vec<ModuleInfo> {
     let mut modules = Vec::new();
 
     if let Ok(entries) = module_dir.read_dir() {
@@ -82,5 +82,5 @@ pub fn scan_modules(module_dir: &PathBuf) -> Result<Vec<ModuleInfo>> {
     }
     modules.sort_by(|a, b| a.id.cmp(&b.id));
 
-    Ok(modules)
+    modules
 }
