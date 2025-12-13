@@ -1,5 +1,7 @@
-use std::{fs, path::Path};
+use std::{collections::HashMap, io::Cursor, path::Path};
 
+use anyhow::{Context, Result};
+use java_properties::PropertiesIter;
 use serde::Serialize;
 
 use crate::defs::{DISABLE_FILE_NAME, REMOVE_FILE_NAME, SKIP_MOUNT_FILE_NAME};
@@ -15,15 +17,22 @@ pub struct ModuleInfo {
     pub skip: bool,
 }
 
-fn read_prop(vaule: &str, key: &str) -> Option<String> {
-    for line in vaule.lines() {
-        if line.starts_with(key)
-            && let Some((_, value)) = line.split_once('=')
-        {
-            return Some(value.trim().to_string());
-        }
-    }
-    None
+fn read_prop<P>(path: P) -> Result<HashMap<String, String>>
+where
+    P: AsRef<Path>,
+{
+    let prop_path = path.as_ref().join("module.prop");
+    let content = std::fs::read_to_string(&prop_path)
+        .with_context(|| format!("Failed to read module.prop: {}", prop_path.display()))?;
+
+    let mut prop_map: HashMap<String, String> = HashMap::new();
+    PropertiesIter::new_with_encoding(Cursor::new(content), encoding_rs::UTF_8)
+        .read_into(|k, v| {
+            prop_map.insert(k, v);
+        })
+        .with_context(|| format!("Failed to parse module.prop: {}", prop_path.display()))?;
+
+    Ok(prop_map)
 }
 
 /// Scans for modules that will be actually mounted by `magic_mount`.
@@ -61,16 +70,23 @@ where
             }
 
             let id = entry.file_name().to_string_lossy().to_string();
-            let prop_path = path.join("module.prop");
 
-            let Ok(prop) = fs::read_to_string(prop_path) else {
+            let Ok(prop_map) = read_prop(path) else {
                 continue;
             };
-            let name = read_prop(&prop, "name").unwrap_or_else(|| id.clone());
-            let version = read_prop(&prop, "version").unwrap_or_else(|| "unknown".to_string());
-            let author = read_prop(&prop, "author").unwrap_or_else(|| "unknown".to_string());
-            let description =
-                read_prop(&prop, "description").unwrap_or_else(|| "unknown".to_string());
+
+            let name = prop_map
+                .get("name")
+                .map_or_else(|| "unknown".to_string(), std::clone::Clone::clone);
+            let version = prop_map
+                .get("version")
+                .map_or_else(|| "unknown".to_string(), std::clone::Clone::clone);
+            let author = prop_map
+                .get("author")
+                .map_or_else(|| "unknown".to_string(), std::clone::Clone::clone);
+            let description = prop_map
+                .get("description")
+                .map_or_else(|| "unknown".to_string(), std::clone::Clone::clone);
 
             modules.push(ModuleInfo {
                 id,
