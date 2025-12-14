@@ -4,6 +4,8 @@ use serde::Serialize;
 
 use crate::defs::{DISABLE_FILE_NAME, REMOVE_FILE_NAME, SKIP_MOUNT_FILE_NAME};
 
+const PERFIX: &[&str] = &["system", "odm"];
+
 #[derive(Debug, Serialize)]
 pub struct ModuleInfo {
     pub id: String,
@@ -49,8 +51,10 @@ where
                 continue;
             }
 
-            if !path.join("system").is_dir() {
-                continue;
+            for i in PERFIX {
+                if !path.join(i).is_dir() {
+                    continue;
+                }
             }
 
             let disabled =
