@@ -2,7 +2,7 @@ mod node;
 mod utils;
 
 use std::{
-    fs::{self, DirEntry, create_dir,create_dir_all, read_dir, read_link},
+    fs::{self, DirEntry, create_dir, create_dir_all, read_dir, read_link},
     os::unix::fs::{MetadataExt, symlink},
     path::Path,
 };
@@ -12,7 +12,7 @@ use rustix::{
     fs::{Gid, Mode, Uid, chmod, chown},
     mount::{
         MountFlags, MountPropagationFlags, UnmountFlags, mount, mount_bind, mount_change,
-        mount_remount, unmount, mount_move,
+        mount_move, mount_remount, unmount,
     },
     path::Arg,
 };

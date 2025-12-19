@@ -1,8 +1,6 @@
 use std::path::Path;
 
-use crate::{
-    magic_mount::{node::{NodeFileType, Node}},
-};
+use crate::magic_mount::node::{Node, NodeFileType};
 
 pub fn check_tmpfs<P>(node: &mut Node, path: P) -> (Node, bool)
 where
