@@ -14,16 +14,7 @@ fn info() -> Option<GetInfoCmd> {
 
     let fd = get_fd();
 
-    let ret = unsafe {
-        #[cfg(target_env = "gnu")]
-        {
-            libc::ioctl(fd as libc::c_int, KSU_IOCTL_GET_INFO, &mut cmd)
-        }
-        #[cfg(not(target_env = "gnu"))]
-        {
-            libc::ioctl(fd as libc::c_int, KSU_IOCTL_GET_INFO, &mut cmd)
-        }
-    };
+    let ret = unsafe { libc::ioctl(fd as libc::c_int, KSU_IOCTL_GET_INFO, &mut cmd) };
 
     if ret < 0 { None } else { Some(cmd) }
 }
