@@ -52,7 +52,13 @@ fn main() -> Result<()> {
     if args.len() > 1 {
         match args[1].as_str() {
             "scan" => {
-                let json_output = args.len() > 2 && args[2] == "--json";
+                let json_output = if let Some(s) = args.get(2)
+                    && s.as_str() == "--json"
+                {
+                    true
+                } else {
+                    false
+                };
 
                 let modules = scanner::scan_modules(&config.moduledir, &config.partitions);
 
