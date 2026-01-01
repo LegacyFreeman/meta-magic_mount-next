@@ -5,8 +5,6 @@
 
 mod config;
 mod defs;
-#[cfg(any(target_os = "linux", target_os = "android"))]
-mod ksu;
 mod magic_mount;
 mod scanner;
 mod utils;
@@ -81,7 +79,7 @@ fn main() -> Result<()> {
 
     init_logger(config.verbose);
 
-    if !ksu::check_ksu() {
+    if !utils::ksucalls::check_ksu() {
         log::error!("only support KernelSU!!");
         panic!();
     }
@@ -100,7 +98,7 @@ fn main() -> Result<()> {
         utils::select_temp_dir().context("failed to select temp dir automatically")?
     };
 
-    let _ = ksu::try_umount::TMPFS.set(tempdir.as_str()?.to_string());
+    let _ = utils::ksucalls::try_umount::TMPFS.set(tempdir.as_str()?.to_string());
 
     utils::ensure_dir_exists(&tempdir)?;
 

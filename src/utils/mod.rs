@@ -1,6 +1,9 @@
 // Copyright 2025 Magic Mount-rs Authors
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+#[cfg(any(target_os = "linux", target_os = "android"))]
+pub mod ksucalls;
+
 use std::{
     fs::create_dir_all,
     path::{Path, PathBuf},
