@@ -3,14 +3,17 @@
 # Magic Mount Metamodule
 
 [![Telegram][telegram-badge]][telegram-url]
+
 </div>
 
-[telegram-badge]: https://img.shields.io/badge/Group-blue\?style\=for-the-badge\&logo\=telegram\&label\=Telegram
+[telegram-badge]: https://img.shields.io/badge/Group-blue?style=for-the-badge&logo=telegram&label=Telegram
 [telegram-url]: https://t.me/mmrs_ci
 
 Provide systemless mount capabilities for KernelSU.
 
 The author will update this project less frequently due to academic commitments.
+
+Distribution to any domestic (Chinese) platform without permission is prohibited.
 
 ---
 
@@ -37,6 +40,7 @@ partitions = []
 | `verbose` | Whether to output debug logs. `true` will show detailed mount information. |
 | `umount` | Whether to attempt unmount (depends on KernelSU's umount). |
 | `partitions` | A list of specific partitions to perform Systemless operations on, e.g. `"mi_ext"`, `"my_stock"`. |
+| `tmpfsdir` | Temporary directory, default is `/debug_ramdisk`. This option is optional. |
 
 Configuration can also be performed via the Web UI (recommended).
 
@@ -50,6 +54,7 @@ Dependencies:
 * Android NDK
 * `cargo-ndk`
 * Node.js / npm
+* `pnpm` and `vite` as dependency and frontend for webui
 
 Environment variables:
 

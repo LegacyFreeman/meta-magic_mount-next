@@ -3,6 +3,9 @@
 # Magic Mount Metamodule
 
 [![Telegram][telegram-badge]][telegram-url]
+
+[English](README_en.md)
+
 </div>
 
 [telegram-badge]: https://img.shields.io/badge/Group-blue?style=for-the-badge&logo=telegram&label=Telegram
@@ -55,7 +58,7 @@ partitions = []
 
 * Node.js / npm
 
-* pnpm and vite as dependency and frontend for webui
+* `pnpm` and `vite` as dependency and frontend for webui
 
 环境变量：
 ```shell
