@@ -62,13 +62,15 @@ fn cal_version_code(version: &str) -> Result<usize> {
     Ok(manjor * 100000 + minor * 1000 + patch)
 }
 
-fn cal_short_hash() -> Result<String> {
+fn cal_git_code() -> Result<i32> {
     Ok(String::from_utf8(
         Command::new("git")
-            .args(["rev-parse", "--short", "HEAD"])
+            .args(["rev-list", "--count", "HEAD"])
             .output()?
             .stdout,
-    )?)
+    )?
+    .trim()
+    .parse::<i32>()?)
 }
 
 fn gen_module_prop(data: &CargoConfig) -> Result<()> {
@@ -87,7 +89,7 @@ fn gen_module_prop(data: &CargoConfig) -> Result<()> {
         }
     }
     let author = author.trim();
-    let version = format!("{}-{}", package.version, cal_short_hash()?);
+    let version = format!("{}-{}", package.version, cal_git_code()?);
 
     let mut file = fs::OpenOptions::new()
         .create(true)

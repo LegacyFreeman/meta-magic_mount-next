@@ -52,15 +52,6 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn cal_short_hash() -> Result<String> {
-    Ok(String::from_utf8(
-        Command::new("git")
-            .args(["rev-parse", "--short", "HEAD"])
-            .output()?
-            .stdout,
-    )?)
-}
-
 fn cal_version_code(version: &str) -> Result<usize> {
     let manjor = version
         .split('.')
@@ -80,6 +71,17 @@ fn cal_version_code(version: &str) -> Result<usize> {
 
     // Version code rule: Major * 100000 + Minor * 1000 + Patch
     Ok(manjor * 100000 + minor * 1000 + patch)
+}
+
+fn cal_git_code() -> Result<i32> {
+    Ok(String::from_utf8(
+        Command::new("git")
+            .args(["rev-list", "--count", "HEAD"])
+            .output()?
+            .stdout,
+    )?
+    .trim()
+    .parse::<i32>()?)
 }
 
 fn update() -> Result<()> {
@@ -162,7 +164,7 @@ fn build() -> Result<()> {
         &Path::new("output").join(format!(
             "magic_mount_rs-{}-{}.zip",
             &data.package.version,
-            cal_short_hash()?
+            &cal_git_code()?
         )),
         &temp_dir,
         |_| options,
