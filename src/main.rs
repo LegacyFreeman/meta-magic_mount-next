@@ -1,10 +1,6 @@
 // Copyright 2025 Magic Mount-rs Authors
 // SPDX-License-Identifier: GPL-3.0-or-later
-<<<<<<< HEAD
 #![deny(clippy::all, clippy::pedantic)]
-=======
-
->>>>>>> parent of 2a9a6df (feat: add verify (#45))
 #![warn(clippy::nursery)]
 
 mod config;
