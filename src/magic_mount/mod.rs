@@ -360,11 +360,13 @@ where
         }
         #[cfg(any(target_os = "linux", target_os = "android"))]
         {
-            LIST.lock().unwrap().flags(2);
-            LIST.lock()
-                .unwrap()
-                .format_msg(|p| format!("umount {p:?} successful"));
-            LIST.lock().unwrap().umount()?;
+            if crate::utils::ksucalls::KSU.load(std::sync::atomic::Ordering::Relaxed) {
+                LIST.lock().unwrap().flags(2);
+                LIST.lock()
+                    .unwrap()
+                    .format_msg(|p| format!("umount {p:?} successful"));
+                LIST.lock().unwrap().umount()?;
+            }
         }
         fs::remove_dir(tmp_dir).ok();
 

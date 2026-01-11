@@ -1,9 +1,5 @@
 #!/system/bin/sh
 
-if [ -z $KSU ]; then
-  abort "only support KernelSU!!"
-fi
-
 ui_print "- Detecting device architecture..."
 
 ABI=$(getprop ro.product.cpu.abi)

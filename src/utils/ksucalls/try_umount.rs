@@ -20,6 +20,10 @@ pub fn send_unmountable<P>(target: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
+    if !super::KSU.load(std::sync::atomic::Ordering::Relaxed) {
+        return Ok(());
+    }
+    
     if LAST.load(std::sync::atomic::Ordering::Relaxed) {
         return Ok(());
     }

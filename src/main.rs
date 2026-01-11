@@ -84,10 +84,7 @@ fn main() -> Result<()> {
 
     init_logger();
 
-    if !utils::ksucalls::check_ksu() {
-        log::error!("only support KernelSU!!");
-        panic!();
-    }
+    utils::ksucalls::check_ksu();
 
     log::info!("Magic Mount Starting");
     log::info!("config info:\n{config}");
