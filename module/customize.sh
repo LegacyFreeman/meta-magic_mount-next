@@ -39,16 +39,16 @@ chmod 755 "$MODPATH/meta-mm" || abort "! Failed to set permissions"
 
 ui_print "- Architecture-specific binary installed successfully"
 
-mkdir -p /data/adb/magic_mount
+mkdir -p "/data/adb/magic_mount"
 
-if [ ! -f /data/adb/magic_mount/config.toml ]; then
+if [ ! -f "/data/adb/magic_mount/config.toml" ]; then
   ui_print "- Add default config"
-  if [ $APATCH ]; then
-    cat "$MODPATH/config_apatch.toml" >/data/adb/magic_mount/config.toml
+  if [ -n "${APATCH:-}" ]; then
+    cat "$MODPATH/config_apatch.toml" > "/data/adb/magic_mount/config.toml"
   fi
 
-  if [ $KSU ]; then
-    cat "$MODPATH/config.toml" >/data/adb/magic_mount/config.toml
+  if [ -n "${KSU:-}" ]; then
+    cat "$MODPATH/config.toml" > "/data/adb/magic_mount/config.toml"
   fi
 
   
