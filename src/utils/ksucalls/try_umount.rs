@@ -50,7 +50,8 @@ where
             continue;
         }
 
-        if fs::read_to_string("/data/adb/zygisksu/denylist_enforce")?.trim() != "0"
+        if let Ok(s) = fs::read_to_string("/data/adb/zygisksu/denylist_enforce")
+            && s.trim() != "0"
             && TMPFS.get().is_some_and(|s| s.trim() == "/debug_ramdisk")
         {
             log::warn!("zn was detected, and try_umount was cancelled.");
