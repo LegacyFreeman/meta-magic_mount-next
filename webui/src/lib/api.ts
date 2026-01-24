@@ -66,12 +66,14 @@ function parseKvConfig(text: string): MagicConfig {
           if (key === "partitions") {
             result.partitions = [];
           }
+
           continue;
         }
         const parts = value.split(",").map((s) => stripQuotes(s.trim()));
         if (key === "partitions") {
           result.partitions = parts;
         }
+
         continue;
       }
 
@@ -81,14 +83,17 @@ function parseKvConfig(text: string): MagicConfig {
       switch (key) {
         case "tempdir": {
           result.tempdir = value;
+
           break;
         }
         case "mountsource": {
           result.mountsource = value;
+
           break;
         }
         case "umount": {
           result.umount = isTrueValue(rawValue);
+
           break;
         }
       }
