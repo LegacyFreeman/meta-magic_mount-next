@@ -7,6 +7,7 @@ on:
       - 'Cargo.*'
       - 'module/**'
       - 'webui/**'
+      - 'xtask/**'
       - 'build.rs'
       - '.github/workflows/ci.yml'
   pull_request:
@@ -16,6 +17,7 @@ on:
       - 'Cargo.*'
       - 'module/**'
       - 'webui/**'
+      - 'xtask/**'
       - 'build.rs'
       - '.github/workflows/ci.yml'
 env:
@@ -56,6 +58,9 @@ jobs:
         uses: actions/setup-node@v6.1.0
         with:
           node-version: "lts/*"
+          cache: pnpm
+          package-manager-cache: ${{ github.event_name == 'push' }}
+          cache-dependency-path: webui/pnpm-lock.yaml
       - uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.event_name == 'push' }}
@@ -80,7 +85,7 @@ jobs:
       - name: Upload release version
         uses: actions/upload-artifact@v4
         with:
-          name: meta-mm
+          name: meta-mm-${{ github.run_number }}
           compression-level: 9
           path: output/artifact/
       - name: Upload
@@ -91,6 +96,7 @@ jobs:
           BOT_CI_SESSION: ${{ secrets.BOT_CI_SESSION }}
           COMMIT_MESSAGE: ${{ format('{0}', github.event.head_commit.message) }}
           COMMIT_URL: ${{ github.event.head_commit.url }}
+          RUN_ID: ${{ github.run_number }}
         run: |
           if [ -z "${BOT_TOKEN:-}" ] || [ -z "${CHAT_ID:-}" ] || [ -z "${BOT_CI_SESSION:-}" ]; then
             exit 0

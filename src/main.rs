@@ -111,7 +111,7 @@ fn main() -> Result<()> {
         MountFlags::empty(),
         None,
     ) {
-        log::error!("mount tmpfs failed: {e}");
+        panic!("mount tmpfs failed: {e}");
     }
 
     let result = magic_mount::magic_mount(
